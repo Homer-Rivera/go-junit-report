@@ -26,7 +26,7 @@ type JUnitTestSuite struct {
 	Failures   int             `xml:"failures,attr"`
 	Time       string          `xml:"time,attr"`
 	Name       string          `xml:"name,attr"`
-	Properties []JUnitProperty `xml:"properties>property,omitempty"`
+	Properties []JUnitProperty `xml:"properties,omitempty>property,omitempty"`
 	TestCases  []JUnitTestCase `xml:"testcase"`
 }
 
@@ -81,11 +81,17 @@ func JUnitReportXML(report *parser.Report, noXMLHeader bool, goVersion string, w
 		}
 
 		// properties
-		if goVersion == "" {
+		if goVersion == "false" {
+			ts.Properties = nil
+		} else if goVersion == "" {
 			// if goVersion was not specified as a flag, fall back to version reported by runtime
 			goVersion = runtime.Version()
+		} else {
+			ts.Properties = append(ts.Properties, JUnitProperty{"go.version", goVersion})
 		}
-		ts.Properties = append(ts.Properties, JUnitProperty{"go.version", goVersion})
+		if pkg.CoveragePct != "" {
+			ts.Properties = append(ts.Properties, JUnitProperty{"coverage.statements.pct", pkg.CoveragePct})
+		}
 		if pkg.CoveragePct != "" {
 			ts.Properties = append(ts.Properties, JUnitProperty{"coverage.statements.pct", pkg.CoveragePct})
 		}
